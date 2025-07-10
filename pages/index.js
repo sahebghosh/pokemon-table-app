@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -26,6 +26,7 @@ export async function getServerSideProps(context) {
         height: detailData.height,
         weight: detailData.weight,
         image: detailData.sprites.front_default,
+        base_experience: detailData.base_experience,
       };
     })
   );
@@ -41,6 +42,7 @@ export async function getServerSideProps(context) {
 }
 
 export default function Home({ pokemons, offset, limit, totalCount }) {
+  const [selectedPokemon, setSelectedPokemon] = useState(null);
   const columnHelper = createColumnHelper();
 
   const columns = useMemo(
@@ -104,7 +106,11 @@ export default function Home({ pokemons, offset, limit, totalCount }) {
           </thead>
           <tbody>
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id}>
+              <tr
+                key={row.id}
+                onClick={() => setSelectedPokemon(row.original)}
+                className="cursor-pointer hover:bg-gray-100 transition"
+              >
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
@@ -118,7 +124,7 @@ export default function Home({ pokemons, offset, limit, totalCount }) {
           </tbody>
         </table>
 
-        {/* Pagination Controls */}
+        {/* Pagination */}
         <div className="flex justify-between mt-6">
           {hasPrev ? (
             <Link href={`/?offset=${offset - limit}`}>
@@ -139,6 +145,40 @@ export default function Home({ pokemons, offset, limit, totalCount }) {
           )}
         </div>
       </div>
+
+      {/* Modal */}
+      {selectedPokemon && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full relative">
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              onClick={() => setSelectedPokemon(null)}
+            >
+              ✖
+            </button>
+
+            <div className="text-center">
+              <img
+                src={selectedPokemon.image}
+                alt={selectedPokemon.name}
+                className="w-24 h-24 mx-auto mb-4"
+              />
+              <h2 className="text-2xl font-bold mb-2 capitalize">
+                {selectedPokemon.name}
+              </h2>
+              <p>
+                <strong>Height:</strong> {selectedPokemon.height}
+              </p>
+              <p>
+                <strong>Weight:</strong> {selectedPokemon.weight}
+              </p>
+              <p>
+                <strong>Base XP:</strong> {selectedPokemon.base_experience}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
