@@ -129,6 +129,8 @@ export default function Home({
   const handleSearch = (e) => {
     e.preventDefault();
     const name = searchInput.trim().toLowerCase();
+
+    if (!name) return; // do nothing
     if (name) {
       router.push(`/?search=${name}`);
     } else {
