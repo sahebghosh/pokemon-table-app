@@ -9,8 +9,10 @@ import Link from 'next/link';
 
 export async function getServerSideProps(context) {
   const offset = parseInt(context.query.offset) || 0;
-  const limit = 20;
+  const evOffset = parseInt(context.query.evOffset) || 0;
+  const limit = 5; // ⚠️ for evolution triggers pagination to appear
 
+  // Fetch Pokémon
   const res = await fetch(
     `https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`
   );
@@ -31,17 +33,34 @@ export async function getServerSideProps(context) {
     })
   );
 
+  // Fetch Evolution Triggers
+  const evoRes = await fetch(
+    `https://pokeapi.co/api/v2/evolution-trigger/?limit=${limit}&offset=${evOffset}`
+  );
+  const evoData = await evoRes.json();
+
   return {
     props: {
       pokemons: pokemonDetails,
       offset,
+      evOffset,
       limit,
       totalCount: data.count,
+      evoTriggers: evoData.results,
+      evoTotalCount: evoData.count,
     },
   };
 }
 
-export default function Home({ pokemons, offset, limit, totalCount }) {
+export default function Home({
+  pokemons,
+  offset,
+  limit,
+  totalCount,
+  evoTriggers,
+  evOffset,
+  evoTotalCount,
+}) {
   const [selectedPokemon, setSelectedPokemon] = useState(null);
   const columnHelper = createColumnHelper();
 
@@ -82,9 +101,10 @@ export default function Home({ pokemons, offset, limit, totalCount }) {
   return (
     <main className="min-h-screen bg-white py-10 px-4">
       <h1 className="text-3xl font-bold text-center text-blue-600 mb-6">
-        Pokémon Table with Pagination
+        Pokémon Table with Pagination & Modal
       </h1>
 
+      {/* Pokémon Table */}
       <div className="overflow-x-auto max-w-4xl mx-auto">
         <table className="table-auto border border-gray-300 w-full">
           <thead className="bg-gray-100">
@@ -124,10 +144,10 @@ export default function Home({ pokemons, offset, limit, totalCount }) {
           </tbody>
         </table>
 
-        {/* Pagination */}
+        {/* Pokémon Pagination */}
         <div className="flex justify-between mt-6">
           {hasPrev ? (
-            <Link href={`/?offset=${offset - limit}`}>
+            <Link href={`/?offset=${offset - limit}&evOffset=${evOffset}`}>
               <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                 Previous
               </button>
@@ -137,7 +157,7 @@ export default function Home({ pokemons, offset, limit, totalCount }) {
           )}
 
           {hasNext && (
-            <Link href={`/?offset=${offset + limit}`}>
+            <Link href={`/?offset=${offset + limit}&evOffset=${evOffset}`}>
               <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                 Next
               </button>
@@ -179,6 +199,54 @@ export default function Home({ pokemons, offset, limit, totalCount }) {
           </div>
         </div>
       )}
+
+      {/* Evolution Triggers Table */}
+      <section className="mt-12 max-w-4xl mx-auto">
+        <h2 className="text-2xl font-bold text-blue-500 mb-4">
+          Evolution Triggers
+        </h2>
+        <table className="table-auto w-full border border-gray-300">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-2 border">Name</th>
+              <th className="px-4 py-2 border">URL</th>
+            </tr>
+          </thead>
+          <tbody>
+            {evoTriggers.map((item, index) => (
+              <tr key={index}>
+                <td className="px-4 py-2 border capitalize">
+                  {item.name.replace(/-/g, ' ')}
+                </td>
+                <td className="px-4 py-2 border text-blue-600 underline break-all">
+                  {item.url}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Evolution Pagination */}
+        <div className="flex justify-between mt-4">
+          {evOffset > 0 ? (
+            <Link href={`/?offset=${offset}&evOffset=${evOffset - limit}`}>
+              <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                Prev Page
+              </button>
+            </Link>
+          ) : (
+            <div />
+          )}
+
+          {evOffset + limit < evoTotalCount ? (
+            <Link href={`/?offset=${offset}&evOffset=${evOffset + limit}`}>
+              <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                Next Page
+              </button>
+            </Link>
+          ) : null}
+        </div>
+      </section>
     </main>
   );
 }
