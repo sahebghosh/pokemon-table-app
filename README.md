@@ -1,40 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Pokémon Table App 🧬
 
-## Getting Started
+A sleek and responsive web application built with **Next.js** and **Tailwind CSS** that displays a searchable and paginated list of Pokémon and Evolution Triggers using the [PokéAPI](https://pokeapi.co/).
 
-First, run the development server:
+## ✨ Features
+
+- Pokémon Table with:
+  - Search by exact name
+  - Pagination (Next/Previous)
+  - Detail Modal with stats
+- Evolution Triggers Table:
+  - Separate paginated table
+- Tab view to switch between Pokémon List and Evolution Triggers
+- Loading spinner on navigation
+
+---
+
+## ⚙️ Tech Stack
+
+- [Next.js](https://nextjs.org/)
+- [React](https://react.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Framer Motion](https://www.framer.com/motion/) (for tab animation)
+- [PokéAPI](https://pokeapi.co/) (external data source)
+
+---
+
+## Preview
+
+<img src="./public/preview.png" alt="App Preview" width="100%" />
+
+## 🚀 Getting Started
+
+### 1. Clone the repository
 
 ```bash
+git clone https://github.com/sahebghosh/pokemon-table-app.git
+cd pokemon-table-app
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+App runs at: http://localhost:3000
+
+
+
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
-
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
-
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
-
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
