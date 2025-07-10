@@ -1,12 +1,11 @@
-import { useMemo, useState, useEffect } from 'react';
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  createColumnHelper,
-} from '@tanstack/react-table';
-import Link from 'next/link';
+// pages/index.js
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
+import PokemonTable from '../components/PokemonTable';
+import EvolutionTriggersTable from '../components/EvolutionTriggersTable';
+import Modal from '../components/Modal';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export async function getServerSideProps(context) {
   const offset = parseInt(context.query.offset) || 0;
@@ -23,8 +22,8 @@ export async function getServerSideProps(context) {
     `https://pokeapi.co/api/v2/evolution-trigger/?limit=${limit}&offset=${evOffset}`
   );
   const evoData = await evoRes.json();
-  evoTriggers = evoData.results;
-  evoTotalCount = evoData.count;
+  evoTriggers = evoData?.results || [];
+  evoTotalCount = evoData?.count || 0;
 
   if (search) {
     try {
@@ -108,8 +107,8 @@ export default function Home({
 }) {
   const [selectedPokemon, setSelectedPokemon] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [searchText, setSearchText] = useState(search || '');
-  const columnHelper = createColumnHelper();
+  const [searchInput, setSearchInput] = useState(search || '');
+  const [activeTab, setActiveTab] = useState('pokemon');
   const router = useRouter();
 
   useEffect(() => {
@@ -127,47 +126,9 @@ export default function Home({
     };
   }, [router]);
 
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor('image', {
-        header: 'Image',
-        cell: (info) => (
-          <img
-            src={info.getValue()}
-            alt="pokemon"
-            className="w-10 h-10 rounded-full border"
-          />
-        ),
-      }),
-      columnHelper.accessor('name', {
-        header: 'Name',
-        cell: (info) =>
-          info.getValue().charAt(0).toUpperCase() + info.getValue().slice(1),
-      }),
-      columnHelper.accessor('height', {
-        header: 'Height',
-        cell: (info) => `${info.getValue()}`,
-      }),
-      columnHelper.accessor('weight', {
-        header: 'Weight',
-        cell: (info) => `${info.getValue()}`,
-      }),
-    ],
-    []
-  );
-
-  const table = useReactTable({
-    data: pokemons,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
-  const hasPrev = offset > 0;
-  const hasNext = offset + limit < totalCount;
-
   const handleSearch = (e) => {
     e.preventDefault();
-    const name = searchText.trim().toLowerCase();
+    const name = searchInput.trim().toLowerCase();
     if (name) {
       router.push(`/?search=${name}`);
     } else {
@@ -177,220 +138,118 @@ export default function Home({
 
   return (
     <main className="min-h-screen bg-gray-50 py-8 px-4 text-gray-800 relative">
+      <Head>
+        <title>Pokémon Table App</title>
+      </Head>
+
       {loading && (
         <div className="fixed inset-0 bg-white bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="w-12 h-12 border-4 border-indigo-300 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
-      <h1 className="text-3xl font-bold text-center text-indigo-600 mb-3">
-        Pokémon List
+      <h1 className="text-3xl font-bold text-center text-indigo-600 mb-8">
+        Pokémon Dashboard
       </h1>
 
-      <form
-        onSubmit={handleSearch}
-        className="max-w-lg mx-auto mb-6 flex gap-3"
-      >
-        <input
-          name="search"
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          placeholder="Search exact Pokémon name"
-          className="w-full border px-4 py-2 rounded shadow-sm focus:outline-none focus:ring focus:ring-indigo-300"
-        />
-        <button
-          type="submit"
-          className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
-        >
-          Search
-        </button>
-        {search && (
-          <button
-            type="button"
-            onClick={() => {
-              setSearchText('');
-              router.push('/');
-            }}
-            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
-          >
-            Reset
-          </button>
-        )}
-      </form>
-
       <div className="max-w-5xl mx-auto">
-        <div className="overflow-x-auto shadow rounded-lg">
-          <table className="min-w-full table-auto border border-gray-300 rounded">
-            <thead className="bg-indigo-100 text-indigo-700">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <th
-                      key={header.id}
-                      className="px-6 py-3 border text-left text-sm font-medium"
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {table.getRowModel().rows.length > 0 ? (
-                table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    onClick={() => setSelectedPokemon(row.original)}
-                    className="hover:bg-indigo-50 transition cursor-pointer text-sm h-10"
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-6 py-2 border">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={columns.length}
-                    className="text-center py-4 text-gray-500"
-                  >
-                    No Pokémon found with that name.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <div className="flex mb-6 bg-white shadow rounded-t-lg overflow-hidden">
+          <button
+            onClick={() => setActiveTab('pokemon')}
+            className={`w-1/2 py-3 text-center font-medium transition-all duration-300 ${
+              activeTab === 'pokemon'
+                ? 'bg-white text-indigo-600 border-b-2 border-indigo-600'
+                : 'bg-gray-100 text-gray-600'
+            }`}
+          >
+            Pokémon List
+          </button>
+          <button
+            onClick={() => setActiveTab('evolution')}
+            className={`w-1/2 py-3 text-center font-medium transition-all duration-300 ${
+              activeTab === 'evolution'
+                ? 'bg-white text-indigo-600 border-b-2 border-indigo-600'
+                : 'bg-gray-100 text-gray-600'
+            }`}
+          >
+            Evolution Triggers
+          </button>
         </div>
 
-        {!search && (
-          <div className="flex justify-between mt-4">
-            {hasPrev ? (
-              <Link
-                href={`/?offset=${offset - limit}&evOffset=${evOffset}${
-                  search ? `&search=${search}` : ''
-                }`}
-              >
-                <button className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                  Previous
-                </button>
-              </Link>
-            ) : (
-              <div />
-            )}
-
-            {hasNext && (
-              <Link
-                href={`/?offset=${offset + limit}&evOffset=${evOffset}${
-                  search ? `&search=${search}` : ''
-                }`}
-              >
-                <button className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                  Next
-                </button>
-              </Link>
-            )}
-          </div>
-        )}
-      </div>
-
-      {selectedPokemon && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 transition">
-          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full relative animate-fadeIn">
-            <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
-              onClick={() => setSelectedPokemon(null)}
+        <AnimatePresence mode="wait">
+          {activeTab === 'pokemon' && (
+            <motion.div
+              key="pokemon"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
             >
-              ×
-            </button>
-            <div className="text-center">
-              <img
-                src={selectedPokemon.image}
-                alt={selectedPokemon.name}
-                className="w-24 h-24 mx-auto mb-4 rounded-full border"
+              <form onSubmit={handleSearch} className="mb-6 flex gap-3">
+                <input
+                  name="search"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder="Search exact Pokémon name"
+                  className="w-full border px-4 py-2 rounded shadow-sm focus:outline-none focus:ring focus:ring-indigo-300"
+                />
+                <button
+                  type="submit"
+                  className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+                >
+                  Search
+                </button>
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchInput('');
+                      router.push('/');
+                    }}
+                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                  >
+                    Reset
+                  </button>
+                )}
+              </form>
+
+              <PokemonTable
+                pokemons={pokemons}
+                totalCount={totalCount}
+                offset={offset}
+                limit={limit}
+                search={search}
+                evOffset={evOffset}
+                setSelectedPokemon={setSelectedPokemon}
               />
-              <h2 className="text-2xl font-bold mb-2 capitalize">
-                {selectedPokemon.name}
-              </h2>
-              <p>
-                <strong>Height:</strong> {selectedPokemon.height}
-              </p>
-              <p>
-                <strong>Weight:</strong> {selectedPokemon.weight}
-              </p>
-              <p>
-                <strong>Base XP:</strong> {selectedPokemon.base_experience}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
-      <section className="mt-12 max-w-5xl mx-auto">
-        <h2 className="text-2xl font-bold text-indigo-600 mb-4">
-          Evolution Triggers
-        </h2>
-        <div className="overflow-x-auto shadow rounded-lg">
-          <table className="min-w-full table-auto border border-gray-300 rounded">
-            <thead className="bg-indigo-100 text-indigo-700">
-              <tr>
-                <th className="px-6 py-3 border text-left text-sm font-medium">
-                  Name
-                </th>
-                <th className="px-6 py-3 border text-left text-sm font-medium">
-                  URL
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {evoTriggers.map((item, index) => (
-                <tr key={index} className="text-sm h-10 hover:bg-indigo-50">
-                  <td className="px-6 py-2 border capitalize">
-                    {item.name.replace(/-/g, ' ')}
-                  </td>
-                  <td className="px-6 py-2 border text-blue-600 underline break-all">
-                    {item.url}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="flex justify-between mt-4">
-          {evOffset > 0 ? (
-            <Link
-              href={`/?offset=${offset}&evOffset=${evOffset - limit}${
-                search ? `&search=${search}` : ''
-              }`}
-            >
-              <button className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                Prev Page
-              </button>
-            </Link>
-          ) : (
-            <div />
+              <Modal
+                selectedPokemon={selectedPokemon}
+                onClose={() => setSelectedPokemon(null)}
+              />
+            </motion.div>
           )}
 
-          {evOffset + limit < evoTotalCount ? (
-            <Link
-              href={`/?offset=${offset}&evOffset=${evOffset + limit}${
-                search ? `&search=${search}` : ''
-              }`}
+          {activeTab === 'evolution' && (
+            <motion.div
+              key="evolution"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
             >
-              <button className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                Next Page
-              </button>
-            </Link>
-          ) : null}
-        </div>
-      </section>
+              <EvolutionTriggersTable
+                evoTriggers={evoTriggers}
+                evOffset={evOffset}
+                limit={limit}
+                evoTotalCount={evoTotalCount}
+                offset={offset}
+                search={search}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </main>
   );
 }
