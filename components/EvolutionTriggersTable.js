@@ -1,13 +1,14 @@
 import Link from 'next/link';
 
 export default function EvolutionTriggersTable({
-  evoTriggers,
-  evOffset,
-  limit,
-  evoTotalCount,
-  offset,
-  search,
+  evoTriggers, // Array of evolution trigger objects
+  evOffset, // Current evolution trigger pagination offset
+  limit, // Number of items per page
+  evoTotalCount, // Total number of evolution triggers available
+  offset, // Pokémon table offset (used to preserve URL state)
+  search, // Current search term (if any)
 }) {
+  // Determine if "Prev" and "Next" buttons should be active
   const hasPrev = evOffset > 0;
   const hasNext = evOffset + limit < evoTotalCount;
 
@@ -43,6 +44,7 @@ export default function EvolutionTriggersTable({
         </table>
       </div>
 
+      {/* Pagination buttons */}
       <div className="flex justify-between mt-4">
         {hasPrev ? (
           <Link
@@ -51,7 +53,7 @@ export default function EvolutionTriggersTable({
             }`}
             className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
           >
-            Prev Page
+            Previous
           </Link>
         ) : (
           <div />
@@ -64,7 +66,7 @@ export default function EvolutionTriggersTable({
             }`}
             className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
           >
-            Next Page
+            Next
           </Link>
         )}
       </div>

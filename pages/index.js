@@ -1,4 +1,3 @@
-// pages/index.js
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -7,17 +6,19 @@ import EvolutionTriggersTable from '../components/EvolutionTriggersTable';
 import Modal from '../components/Modal';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Server-side fetching of both Pokémon and Evolution Trigger data
 export async function getServerSideProps(context) {
-  const offset = parseInt(context.query.offset) || 0;
-  const evOffset = parseInt(context.query.evOffset) || 0;
-  const limit = 10;
-  const search = context.query.search?.toLowerCase() || null;
+  const offset = parseInt(context.query.offset) || 0; // Pokémon list offset
+  const evOffset = parseInt(context.query.evOffset) || 0; // Evolution Triggers offset
+  const limit = 10; // Page size for pagination
+  const search = context.query.search?.toLowerCase() || null; // Search query
 
   let pokemons = [];
   let totalCount = 0;
   let evoTriggers = [];
   let evoTotalCount = 0;
 
+  // Evolution triggers fetch
   const evoRes = await fetch(
     `https://pokeapi.co/api/v2/evolution-trigger/?limit=${limit}&offset=${evOffset}`
   );
@@ -25,12 +26,14 @@ export async function getServerSideProps(context) {
   evoTriggers = evoData?.results || [];
   evoTotalCount = evoData?.count || 0;
 
+  // If search query, fetch Pokémon based on search
   if (search) {
     try {
       const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${search}`);
       if (!res.ok) throw new Error('Not Found');
       const data = await res.json();
 
+      // Mapping the searched Pokémon into expected format
       pokemons = [
         {
           name: data.name,
@@ -42,6 +45,7 @@ export async function getServerSideProps(context) {
       ];
       totalCount = 1;
     } catch (err) {
+      // Returning empty state for invalid search
       return {
         props: {
           notFound: true,
@@ -57,11 +61,13 @@ export async function getServerSideProps(context) {
       };
     }
   } else {
+    // Default: Fetch paginated list of Pokémon
     const res = await fetch(
       `https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`
     );
     const data = await res.json();
 
+    // Fetch detail info for each Pokémon
     pokemons = await Promise.all(
       data.results.map(async (pokemon) => {
         const detailRes = await fetch(pokemon.url);
@@ -105,12 +111,13 @@ export default function Home({
   notFound,
   search,
 }) {
-  const [selectedPokemon, setSelectedPokemon] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [searchInput, setSearchInput] = useState(search || '');
-  const [activeTab, setActiveTab] = useState('pokemon');
+  const [selectedPokemon, setSelectedPokemon] = useState(null); // For modal, pokemon details
+  const [loading, setLoading] = useState(false); // For loading spinner
+  const [searchInput, setSearchInput] = useState(search || ''); // Controlled search input
+  const [activeTab, setActiveTab] = useState('pokemon'); // For tab view
   const router = useRouter();
 
+  // Global route change loading spinner handler
   useEffect(() => {
     const handleRouteChangeStart = () => setLoading(true);
     const handleRouteChangeEnd = () => setLoading(false);
@@ -126,11 +133,12 @@ export default function Home({
     };
   }, [router]);
 
+  // Handle search submit
   const handleSearch = (e) => {
     e.preventDefault();
     const name = searchInput.trim().toLowerCase();
 
-    if (!name) return; // do nothing
+    if (!name) return;
     if (name) {
       router.push(`/?search=${name}`);
     } else {
@@ -144,6 +152,7 @@ export default function Home({
         <title>Pokémon Table App</title>
       </Head>
 
+      {/* Full screen loading overlay */}
       {loading && (
         <div className="fixed inset-0 bg-white bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="w-12 h-12 border-4 border-indigo-300 border-t-transparent rounded-full animate-spin" />
@@ -154,6 +163,7 @@ export default function Home({
         Pokémon Dashboard
       </h1>
 
+      {/* Tabs for navigation */}
       <div className="max-w-5xl mx-auto">
         <div className="flex mb-6 bg-white shadow rounded-t-lg overflow-hidden">
           <button
@@ -178,6 +188,7 @@ export default function Home({
           </button>
         </div>
 
+        {/* Tab View with Animation */}
         <AnimatePresence mode="wait">
           {activeTab === 'pokemon' && (
             <motion.div
@@ -187,6 +198,7 @@ export default function Home({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
+              {/* Search Form */}
               <form onSubmit={handleSearch} className="mb-6 flex gap-3">
                 <input
                   name="search"
@@ -201,6 +213,7 @@ export default function Home({
                 >
                   Search
                 </button>
+                {/* Reset button clears search input and route */}
                 {search && (
                   <button
                     type="button"
@@ -215,6 +228,7 @@ export default function Home({
                 )}
               </form>
 
+              {/* Pokémon Table Section */}
               <PokemonTable
                 pokemons={pokemons}
                 totalCount={totalCount}
@@ -225,6 +239,7 @@ export default function Home({
                 setSelectedPokemon={setSelectedPokemon}
               />
 
+              {/* Detail Modal on Pokémon click */}
               <Modal
                 selectedPokemon={selectedPokemon}
                 onClose={() => setSelectedPokemon(null)}
@@ -240,6 +255,7 @@ export default function Home({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
+              {/* Evolution Triggers Table Section */}
               <EvolutionTriggersTable
                 evoTriggers={evoTriggers}
                 evOffset={evOffset}

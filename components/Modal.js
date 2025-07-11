@@ -1,8 +1,11 @@
 export default function Modal({ selectedPokemon, onClose }) {
+  // If no Pokémon is selected, don't render anything
   if (!selectedPokemon) return null;
 
   return (
+    // Full-screen overlay with blur and dimmed background
     <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 transition">
+      {/* Centered modal container with white background */}
       <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full relative animate-fadeIn">
         <button
           className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"

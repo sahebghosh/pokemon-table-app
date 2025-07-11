@@ -8,16 +8,17 @@ import {
 import { useMemo } from 'react';
 
 export default function PokemonTable({
-  pokemons,
-  totalCount,
-  offset,
-  limit,
-  search,
-  evOffset,
-  setSelectedPokemon,
+  pokemons, // Array of Pokémon data
+  totalCount, // Total number of Pokémon from the API
+  offset, // Current pagination offset
+  limit, // Pagination limit per page
+  search, // Current search term (if any)
+  evOffset, // Evolution trigger offset (used to preserve URL state)
+  setSelectedPokemon, // Function to set a Pokémon when row is clicked (for modal)
 }) {
   const columnHelper = createColumnHelper();
 
+  // Define table columns with accessor and custom cell rendering
   const columns = useMemo(
     () => [
       columnHelper.accessor('image', {
@@ -47,12 +48,14 @@ export default function PokemonTable({
     []
   );
 
+  // Initialize table instance with TanStack Table
   const table = useReactTable({
     data: pokemons,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
+  // Calculate pagination states
   const hasPrev = offset > 0;
   const hasNext = offset + limit < totalCount;
 
@@ -109,6 +112,7 @@ export default function PokemonTable({
         </table>
       </div>
 
+      {/* Pagination Buttons - only visible when not searching */}
       {!search && (
         <div className="flex justify-between mt-4">
           {hasPrev ? (
