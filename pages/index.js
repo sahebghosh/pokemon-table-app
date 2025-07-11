@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export async function getServerSideProps(context) {
   const offset = parseInt(context.query.offset) || 0; // Pokémon list offset
   const evOffset = parseInt(context.query.evOffset) || 0; // Evolution Triggers offset
-  const limit = 10; // Page size for pagination
+  const limit = 20; // Page size for pagination
   const search = context.query.search?.toLowerCase() || null; // Search query
 
   let pokemons = [];
